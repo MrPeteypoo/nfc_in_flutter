@@ -665,3 +665,4 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
             mainThread.post(runnable);
         }
     }
+}
