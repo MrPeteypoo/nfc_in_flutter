@@ -13,7 +13,6 @@ import android.nfc.tech.NdefFormatable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -63,7 +62,7 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
     private Tag lastTag = null;
 
     @Override
-    public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
         Log.d(LOG_TAG, "onAttachedToActivity");
         activity = binding.getActivity();
     }
@@ -74,7 +73,7 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
     }
 
     @Override
-    public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
         Log.d(LOG_TAG, "onReattachedToActivityForConfigChanges");
     }
 
@@ -84,7 +83,7 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
     }
 
     @Override
-    public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+    public void onAttachedToEngine(FlutterPluginBinding binding) {
         Log.d(LOG_TAG, "onAttachedToEngine");
 
         BinaryMessenger messenger = binding.getBinaryMessenger();
@@ -97,12 +96,12 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
     }
 
     @Override
-    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    public void onDetachedFromEngine(FlutterPluginBinding binding) {
         Log.d(LOG_TAG, "onDetachedFromEngine");
     }
 
     @Override
-    public void onMethodCall(MethodCall call, @NonNull Result result) {
+    public void onMethodCall(MethodCall call, Result result) {
         switch (call.method) {
             case "readNDEFSupported":
                 result.success(nfcIsEnabled());
