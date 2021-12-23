@@ -123,11 +123,7 @@ class NFC {
     };
 
     try {
-      _startReadingNDEF(
-        once,
-        alertMessage,
-        const NFCNormalReaderMode(),
-      );
+      _startReadingNDEF(once, alertMessage, const NFCNormalReaderMode());
     } on PlatformException catch (err) {
       if (err.code == "NFCMultipleReaderModes") {
         throw NFCMultipleReaderModesException();

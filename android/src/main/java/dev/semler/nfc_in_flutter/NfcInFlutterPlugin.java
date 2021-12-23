@@ -28,13 +28,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
  * NfcInFlutterPlugin
@@ -42,34 +45,59 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 public class NfcInFlutterPlugin implements MethodCallHandler,
         EventChannel.StreamHandler,
         PluginRegistry.NewIntentListener,
-        NfcAdapter.ReaderCallback {
+        NfcAdapter.ReaderCallback,
+        FlutterPlugin,
+        ActivityAware {
 
     private static final String NORMAL_READER_MODE = "normal";
     private static final String DISPATCH_READER_MODE = "dispatch";
     private final int DEFAULT_READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_NFC_F | NfcAdapter.FLAG_READER_NFC_V;
     private static final String LOG_TAG = "NfcInFlutterPlugin";
 
-    private final Activity activity;
+    private Activity activity;
     private NfcAdapter adapter;
     private EventChannel.EventSink events;
 
     private String currentReaderMode = null;
     private Tag lastTag = null;
 
-    /**
-     * Plugin registration.
-     */
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "nfc_in_flutter");
-        final EventChannel tagChannel = new EventChannel(registrar.messenger(), "nfc_in_flutter/tags");
-        NfcInFlutterPlugin plugin = new NfcInFlutterPlugin(registrar.activity());
-        registrar.addNewIntentListener(plugin);
-        channel.setMethodCallHandler(plugin);
-        tagChannel.setStreamHandler(plugin);
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
+        Log.d(LOG_TAG, "onAttachedToActivity");
+        activity = binding.getActivity();
     }
 
-    private NfcInFlutterPlugin(Activity activity) {
-        this.activity = activity;
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        Log.d(LOG_TAG, "onDetachedFromActivityForConfigChanges");
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+        Log.d(LOG_TAG, "onReattachedToActivityForConfigChanges");
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        Log.d(LOG_TAG, "onDetachedFromActivity");
+    }
+
+    @Override
+    public void onAttachedToEngine(FlutterPluginBinding binding) {
+        Log.d(LOG_TAG, "onAttachedToEngine");
+
+        BinaryMessenger messenger = binding.getBinaryMessenger();
+
+        MethodChannel channel = new MethodChannel(messenger, "nfc_in_flutter");
+        channel.setMethodCallHandler(this);
+
+        EventChannel tagChannel = new EventChannel(messenger, "nfc_in_flutter/tags");
+        tagChannel.setStreamHandler(this);
+    }
+
+    @Override
+    public void onDetachedFromEngine(FlutterPluginBinding binding) {
+        Log.d(LOG_TAG, "onDetachedFromEngine");
     }
 
     @Override
@@ -270,6 +298,32 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
     }
 
     private Map<String, Object> formatEmptyWritableNDEFMessage() {
+        final Map<String, Object> result = new HashMap<>();
+        result.put("id", "");
+        result.put("message_type", "ndef");
+        result.put("type", "");
+        result.put("writable", true);
+        List<Map<String, String>> records = new ArrayList<>();
+        Map<String, String> emptyRecord = new HashMap<>();
+        emptyRecord.put("tnf", "empty");
+        emptyRecord.put("id", "");
+        emptyRecord.put("type", "");
+        emptyRecord.put("payload", "");
+        emptyRecord.put("data", "");
+        emptyRecord.put("languageCode", "");
+        records.add(emptyRecord);
+        result.put("records", records);
+        return result;
+    }
+
+    private Map<String, Object> formatEmptyNDEFMessage(Ndef ndef) {
+        final Map<String, Object> result = formatEmptyWritableNDEFMessage();
+        result.put("id", getNDEFTagID(ndef));
+        result.put("writable", ndef.isWritable());
+        return result;
+    }
+
+    private Map<String, Object> formatNDEFMessageToResult(Ndef ndef, NdefMessage message) {
         final Map<String, Object> result = new HashMap<>();
         result.put("id", "");
         result.put("message_type", "ndef");
