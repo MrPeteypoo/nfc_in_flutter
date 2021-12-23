@@ -325,32 +325,6 @@ public class NfcInFlutterPlugin implements MethodCallHandler,
 
     private Map<String, Object> formatNDEFMessageToResult(Ndef ndef, NdefMessage message) {
         final Map<String, Object> result = new HashMap<>();
-        result.put("id", "");
-        result.put("message_type", "ndef");
-        result.put("type", "");
-        result.put("writable", true);
-        List<Map<String, String>> records = new ArrayList<>();
-        Map<String, String> emptyRecord = new HashMap<>();
-        emptyRecord.put("tnf", "empty");
-        emptyRecord.put("id", "");
-        emptyRecord.put("type", "");
-        emptyRecord.put("payload", "");
-        emptyRecord.put("data", "");
-        emptyRecord.put("languageCode", "");
-        records.add(emptyRecord);
-        result.put("records", records);
-        return result;
-    }
-
-    private Map<String, Object> formatEmptyNDEFMessage(Ndef ndef) {
-        final Map<String, Object> result = formatEmptyWritableNDEFMessage();
-        result.put("id", getNDEFTagID(ndef));
-        result.put("writable", ndef.isWritable());
-        return result;
-    }
-
-    private Map<String, Object> formatNDEFMessageToResult(Ndef ndef, NdefMessage message) {
-        final Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> records = new ArrayList<>();
         for (NdefRecord record : message.getRecords()) {
             Map<String, Object> recordMap = new HashMap<>();
